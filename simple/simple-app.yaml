@@ -1,0 +1,76 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: simple-app
+---
+apiVersion: v1
+data:
+  index.html: |
+    The letter of the day is <img src="https://www.pngfind.com/pngs/m/7-76720_freeuse-clipart-letters-of-the-alphabet-free-gold.png"> 
+kind: ConfigMap
+metadata:
+  name: index-map
+  namespace: simple-app
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: simple-app-the-service
+  namespace: simple-app
+spec:
+  ports:
+  - port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    deployment: hello
+    variant: simple-app
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: simple-app
+  namespace: simple-app
+spec:
+  selector:
+    matchLabels:
+      deployment: hello
+      variant: simple-app
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        deployment: hello
+        variant: simple-app
+    spec:
+      containers:
+      -  image: registry.redhat.io/rhel8/httpd-24
+         name: the-container
+         ports:
+         - containerPort: 8080
+           name: web
+         volumeMounts:
+         - name: map-volume
+           mountPath: /var/www/html
+      volumes:
+      - name: map-volume 
+        configMap:
+          name: index-map
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: letter
+spec:
+  port:
+    targetPort: 8080
+  to:
+    kind: Service
+    name: simple-app-the-service
+    weight: 100
+  wildcardPolicy: None
+status:
+  ingress:
+  - conditions:
+    - status: "True"
+      type: Admitted
