@@ -93,4 +93,10 @@ We will now swap the configmap letter of the day and delete the current running 
 ```
 https://toppng.com/uploads/preview/icture-freeuse-library-alphabet-png-images-page-stickpng-free-illustration-letters-alphabet-11563734483yvqwzwpnok.png```
 
-### 
+### ArgoCD protection
+```
+oc delete deployment simple-app
+```
+
+## Building and Multicloud
+ 
