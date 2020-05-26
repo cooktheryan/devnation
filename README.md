@@ -99,4 +99,72 @@ oc delete deployment simple-app
 ```
 
 ## Building and Multicloud
- 
+So I stumbled upon this really awesome code for a game but I need to containerize it so lets do it.
+
+```
+oc new-app registry.access.redhat.com/ubi7/nodejs-8:latest~https://github.com/cooktheryan/pacman.git --dry-run -o yaml > /home/rcook/git/devnation/game/awesome-game.yaml
+``` 
+
+Using Argo let's load our application.
+
+
+Let's expose the route and try to play the game.
+
+```
+oc expose svc/pacman --hostname pacman.demo-sysdeseng.com
+```
+
+It looks like we cannot get cloud provider information for our application so let's make some modifications.
+
+```
+cp game-permissions/* game/
+vi awesome-game.yaml
+
+serviceAccount: pacman
+
+env:
+        - name: MY_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+```
+
+Commit the code
+```
+git add *
+git commit -am 'fixing our game'
+git push origin master
+```
+
+So now we can see our cloud information
+
+
+The problem is now we can't seem to store our high scores. This requires a database. So we talked with our DB team and got the required values for the database.  
+
+```
+cp database/secret.yaml game/
+
+vi awesome-game.yaml
+        - name: MONGO_SERVICE_HOST
+          value: mongo-cluster1.apps.east1.aws.demo-sysdeseng.com,mongo-cluster2.apps.east2.aws.demo-sysdeseng.com,mongo-cluster3.apps.west2.aws.demo-sysdeseng.com 
+        - name: MONGO_REPLICA_SET
+          value: rs0
+        - name: MONGO_AUTH_USER
+          valueFrom:
+            secretKeyRef:
+              key: database-user
+              name: mongodb-users-secret
+        - name: MONGO_AUTH_PWD
+          valueFrom:
+            secretKeyRef:
+              key: database-password
+              name: mongodb-users-secret
+        - name: MONGO_DATABASE
+          value: pacman
+        - name: MY_MONGO_PORT
+          value: "443"
+        - name: MONGO_USE_SSL
+          value: "true"
+        - name: MONGO_VALIDATE_SSL
+          value: "false"
+```

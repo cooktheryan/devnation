@@ -1,0 +1,3 @@
+- op: replace
+  path: /spec/identityProviders/0/github/clientID
+  value: 22a3f6ddd9a89cda9730
