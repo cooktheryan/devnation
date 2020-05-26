@@ -61,6 +61,7 @@ apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
   name: letter
+  namespace: simple-app
 spec:
   port:
     targetPort: 8080
