@@ -7,3 +7,4 @@ patchesStrategicMerge:
 - pacman-cluster-role-binding.yaml
 resources:
 - pacman-cluster-role.yaml
+- pacman-namespace.yaml
