@@ -20,7 +20,6 @@ items:
       from:
         kind: DockerImage
         name: registry.access.redhat.com/ubi7/nodejs-8:latest
-      generation: null
       importPolicy: {}
       name: latest
       referencePolicy:

@@ -44,6 +44,12 @@ argocd cluster add east2
 argocd cluster add west2
 ```
 
+## Authentication
+Since we are setting up our clusters we should setup authentication. This allows us to manage auth between two clusters.
+
+
+
+
 ## Importing an App
 We will start out by having an application deployed and then bringing it within GitOps
 
