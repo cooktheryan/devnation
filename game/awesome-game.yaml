@@ -101,8 +101,7 @@ items:
           deploymentconfig: pacman
       spec:
         containers:
-        - image: pacman:latest
-          name: pacman
+        - name: pacman
           ports:
           - containerPort: 8080
             protocol: TCP
