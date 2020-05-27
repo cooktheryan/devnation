@@ -1,5 +1,14 @@
 # DevNation
 
+Preload
+
+```
+oc create -f /home/rcook/simple/simple-app.yaml
+```
+
+### Stop
+Manually modifying code is unsafe. This can cause potential outages, no change tracking, and general confusion. The same can be said for kubernetes resources.
+
 ## Deploy Argo
 Create a project for ArgoCD operator to be installed
 
@@ -40,38 +49,36 @@ argocd repo add git@github.com:cooktheryan/devnation.git --ssh-private-key-path 
 As stated earlier we will be running a modified hub/spoke.
 ```
 argocd cluster add east1
-argocd cluster add east2
 argocd cluster add west2
 ```
 
 ## Authentication
 Since we are setting up our clusters we should setup authentication. This allows us to manage auth between two clusters.
 
-
+PR a new administrator
+mvazquezc
 
 
 ## Importing an App
 We will start out by having an application deployed and then bringing it within GitOps
 
 ```
-oc create -f simple/simple-app.yaml
-```
-
-### Exporting the app
-We will remove the file simple/simple-app.yaml. What do we do now?
-
-```
-rm simple/simple-app.yaml
-```
-
-We can export the running application and save it within git.
-
-```
+oc project simple-app
 mkdir letters
 oc get deployment -o yaml --export simple-app > letters/deployment.yaml
 oc get configmap -o yaml --export index-map > letters/configmap.yaml
 oc get service -o yaml --export simple-app-the-service > letters/service.yaml
 oc get route -o yaml --export letter > letters/route.yaml
+```
+
+Add namespace yaml
+```
+vi letters/namespace.yaml
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: simple-app
 ```
 
 The route has to be modified to be used with ArgoCD. ingress: null won't work with ArgoCD well.
@@ -88,6 +95,11 @@ Save the code into Git.
 git add letters/*
 git commit -m 'initial commit of our letter of the day'
 ```
+### Someone deleted the App
+```
+oc delete project simple-app
+```
+
 We could have "manual" gitops now but that's no fun.
 
 ### Loading App into ArgoCD
@@ -97,35 +109,44 @@ We will use the UI to load our simple application
 We will now swap the configmap letter of the day and delete the current running pod.
 
 ```
-https://toppng.com/uploads/preview/icture-freeuse-library-alphabet-png-images-page-stickpng-free-illustration-letters-alphabet-11563734483yvqwzwpnok.png```
+git checkout -b letters
+vi letters/configmap.yaml
+
+https://toppng.com/uploads/preview/icture-freeuse-library-alphabet-png-images-page-stickpng-free-illustration-letters-alphabet-11563734483yvqwzwpnok.png
+```
+
+commit the code
+```
+git add configmap.yaml
+git commit -m 'new letter of the day'
+git push origin letters
 
 ### ArgoCD protection
 ```
 oc delete deployment simple-app
 ```
 
-## Building and Multicloud
-So I stumbled upon this really awesome code for a game but I need to containerize it so lets do it.
+## Running an application on Multiple clouds
+https://quay.io/repository/rcook/pacman-nodejs-app
+https://github.com/cooktheryan/pacman
+
 
 ```
-oc new-app registry.access.redhat.com/ubi7/nodejs-8:latest~https://github.com/cooktheryan/pacman.git --dry-run -o yaml > /home/rcook/git/devnation/game/awesome-game.yaml
-``` 
+git checkout master
+git pull
+git checkout -b game
+```
+
+```
+git add game
+git commit -m 'new game'
+git push origin game
 
 Using Argo let's load our application.
 
-
-Let's expose the route and try to play the game.
-
+## Fixing our broken app
 ```
-oc expose svc/pacman --hostname pacman.demo-sysdeseng.com
-```
-
-It looks like we cannot get cloud provider information for our application so let's make some modifications.
-
-```
-cp game-permissions/* game/
-vi awesome-game.yaml
-
+base/pacman-deployment.yaml
 serviceAccount: pacman
 
 env:
@@ -139,38 +160,42 @@ Commit the code
 ```
 git add *
 git commit -am 'fixing our game'
-git push origin master
+git push origin game
 ```
 
 So now we can see our cloud information
 
+## Moving to Prod
+Load East1 into ArgoCD
 
-The problem is now we can't seem to store our high scores. This requires a database. So we talked with our DB team and got the required values for the database.  
-
+Create another route to be used for public access.
 ```
-cp database/secret.yaml game/
+vi base/pacman-public-route.yaml 
 
-vi awesome-game.yaml
-        - name: MONGO_SERVICE_HOST
-          value: mongo-cluster1.apps.east1.aws.demo-sysdeseng.com,mongo-cluster2.apps.east2.aws.demo-sysdeseng.com,mongo-cluster3.apps.west2.aws.demo-sysdeseng.com 
-        - name: MONGO_REPLICA_SET
-          value: rs0
-        - name: MONGO_AUTH_USER
-          valueFrom:
-            secretKeyRef:
-              key: database-user
-              name: mongodb-users-secret
-        - name: MONGO_AUTH_PWD
-          valueFrom:
-            secretKeyRef:
-              key: database-password
-              name: mongodb-users-secret
-        - name: MONGO_DATABASE
-          value: pacman
-        - name: MY_MONGO_PORT
-          value: "443"
-        - name: MONGO_USE_SSL
-          value: "true"
-        - name: MONGO_VALIDATE_SSL
-          value: "false"
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  labels:
+    app.kubernetes.io/instance: game
+    name: pacman
+  name: multicloud
+  namespace: pacman
+spec:
+  host: pacman.demo-sysdeseng.com
+  port:
+    targetPort: 8080
+  to:
+    kind: Service
+    name: pacman
+    weight: 100
+  wildcardPolicy: None
+status:
+  ingress:
+  - conditions:
+    - status: "True"
+      type: Admitted
+
+vi base/kustomization.yaml
+
+- pacman-public-route.yaml
 ```
