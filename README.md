@@ -1,9 +1,9 @@
 # DevNation
 
-Preload
+Preload to allow for the brownfield application to be imported at a later time.
 
 ```
-oc create -f /home/rcook/simple/simple-app.yaml
+oc create -f simple/simple-app.yaml
 ```
 
 ## Deploy Argo
@@ -38,8 +38,9 @@ argocd login --grpc-web --insecure argocd-argocd.apps.east1.aws.demo-sysdeseng.c
 ```
 
 Add the repository
+
 ```
-argocd repo add git@github.com:cooktheryan/devnation.git --ssh-private-key-path ~/.ssh/id_rsa
+argocd repo add git@github.com:cooktheryan/devnation.git
 ```
 
 ### Import Clusters
@@ -57,10 +58,6 @@ Manually modifying code is unsafe. This can cause potential outages, no change t
 
 ## Authentication
 Since we are setting up our clusters we should setup authentication. This allows us to manage auth between two clusters.
-
-PR a new administrator
-mvazquezc
-
 
 ## Importing an App
 We will start out by having an application deployed and then bringing it within GitOps
@@ -131,11 +128,6 @@ oc delete deployment simple-app
 ```
 
 ## Running an application on Multiple clouds
-https://quay.io/repository/rcook/pacman-nodejs-app
-https://github.com/cooktheryan/pacman
-
-BACKUP: docker.io/cooktheryan/pacman-nodejs-app:latest
-
 ```
 git checkout master
 git pull
