@@ -6,9 +6,6 @@ Preload
 oc create -f /home/rcook/simple/simple-app.yaml
 ```
 
-### Stop
-Manually modifying code is unsafe. This can cause potential outages, no change tracking, and general confusion. The same can be said for kubernetes resources.
-
 ## Deploy Argo
 Create a project for ArgoCD operator to be installed
 
@@ -49,8 +46,14 @@ argocd repo add git@github.com:cooktheryan/devnation.git --ssh-private-key-path 
 As stated earlier we will be running a modified hub/spoke.
 ```
 argocd cluster add east1
+argocd cluster add east2
 argocd cluster add west2
 ```
+
+### Stop
+Manually modifying code is unsafe. This can cause potential outages, no change tracking, and general confusion. The same can be said for kubernetes resources.
+
+## Deploy Argo
 
 ## Authentication
 Since we are setting up our clusters we should setup authentication. This allows us to manage auth between two clusters.
@@ -130,6 +133,7 @@ oc delete deployment simple-app
 https://quay.io/repository/rcook/pacman-nodejs-app
 https://github.com/cooktheryan/pacman
 
+BACKUP: docker.io/cooktheryan/pacman-nodejs-app:latest
 
 ```
 git checkout master
