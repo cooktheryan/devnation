@@ -74,6 +74,15 @@ oc get service -o yaml --export simple-app-the-service > letters/service.yaml
 oc get route -o yaml --export letter > letters/route.yaml
 ```
 
+The route has to be modified to be used with ArgoCD. ingress: null won't work with ArgoCD well.
+
+```
+  ingress:
+  - conditions:
+    - status: "True"
+      type: Admitted
+```
+
 Add namespace yaml
 ```
 vi letters/namespace.yaml
@@ -84,14 +93,6 @@ metadata:
   name: simple-app
 ```
 
-The route has to be modified to be used with ArgoCD. ingress: null won't work with ArgoCD well.
-
-```
-  ingress:
-  - conditions:
-    - status: "True"
-      type: Admitted
-```
 
 Save the code into Git.
 ```
